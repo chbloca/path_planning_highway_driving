@@ -159,6 +159,35 @@ int main() {
           }
           */
 
+          if(prev_size > 0)
+              car_s = end_path_s;
+
+          bool too_close = false;
+
+          for(int i = 0; i < sensor_fusion.size(); i++){
+              // Car is in my lane
+              float d = sensor_fusion[i][6];
+              if(d < (2 + 4 * lane + 2) && d > (2 + 4 * lane - 2)){
+                  double vx = sensor_fusion[i][3];
+                  double vy = sensor_fusion[i][4];
+                  double check_speed = sqrt(vx * vx + vy * vy);
+                  double check_car_s = sensor_fusion[i][5];
+
+                  check_car_s += (double)prev_size * .02 * check_speed; // if using previous points we can project s value a step ahead
+                  // Check s values greater than mine and s gap
+                  if(check_car_s > car_s && (check_car_s - car_s) < 30){
+                      // ref_vel = 29.5; // mph. This is a function step, which is not desirable
+                      too_close = true;
+                  }
+
+              }
+          }
+
+          if(too_close)
+              ref_vel -= .224; // ~5 m/s² (< 10 m/s² max. comfortable)
+          else if(ref_vel < 49.5)
+              ref_vel += .224;
+
           // Path planning part
 
           // Create a list of widely spaced waypoints (x, y) which later will be interpolated by a spline
