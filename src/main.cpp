@@ -160,9 +160,9 @@ int main() {
           if(prev_size > 0)
               car_s = end_path_s;
 
-          bool car_on_left = false;
           bool too_close_ahead = false;
-          bool car_on_right = false;
+          bool free_left = true;
+          bool free_right = true;
 
           for(int i = 0; i < sensor_fusion.size(); i++){
               // Other's car is in my lane
@@ -184,69 +184,40 @@ int main() {
               else
                   continue;
 
+              //std::cout << "car_on_lane : " << car_on_lane << "\n";
+
               // if ahead of us
-              if(car_on_lane == lane)
+              if(car_on_lane == lane){
                   if(detected_s - car_s > 0 && detected_s - car_s < 30)
                       too_close_ahead = true;
-              // if on the left side
-              else if(car_on_lane - 1 == lane)
-                      if(car_s > detected_s - 30 && car_s < detected_s + 30)
-                          car_on_left = true;
-              // if on the right side
-              else if(car_on_lane + 1 == lane)
-                          if(car_s > detected_s - 30 && car_s < detected_s + 30)
-                              car_on_right == true;
-
-
-
-              /*
-              if(d < (2 + 4 * lane + 2) && d > (2 + 4 * lane - 2)){
-                  double vx = sensor_fusion[i][3];
-                  double vy = sensor_fusion[i][4];
-                  double check_speed = sqrt(vx * vx + vy * vy);
-                  double check_car_s = sensor_fusion[i][5];
-
-                  check_car_s += (double)prev_size * .02 * check_speed; // if using previous points we can project s value a step ahead
-                  // Check s values greater than mine and s gap
-                  if(check_car_s > car_s && (check_car_s - car_s) < 30){
-                      // ref_vel = 29.5; // mph. This is a function step, which is not desirable
-                      too_close_ahead = true;
-                      if(lane > 0)
-                          lane = 0;
-                  }
               }
-              */
+              // if on the left side
+              else if(car_on_lane + 1 == lane){
+                      if(car_s > abs(detected_s - 20) && car_s < abs(detected_s + 20))
+                          free_left = false;
+              }
+              // if on the right side
+              else if(car_on_lane - 1 == lane){
+                          if(car_s > abs(detected_s - 20) && car_s < abs(detected_s + 20))
+                              free_right == false;
+              }
           }
 
           const double Max_S_dot = 49.5; // max speed mph
           const double Max_S_dot_dot = .224; // ~5 m/s² (< 10 m/s² max. comfortable)
 
-/*
-          if(too_close_ahead)
-              ref_vel -= .224; // ~5 m/s² (< 10 m/s² max. comfortable)
-          else if(ref_vel < 49.5)
-              ref_vel += .224;
-*/
-
-
-
           if(too_close_ahead){
-              if(car_on_left == false && lane > 0)
+              ref_vel -= Max_S_dot_dot;
+              if(free_left && lane > 0)
                   lane--;
-              else if(car_on_right == false && lane < 2)
+              else if(free_right && lane < 2)
                   lane++;
-              else
-                  ref_vel -= Max_S_dot_dot;
-          }else{
-              if((lane == 1 && car_on_right == false) ||
-                 (lane == 0 && car_on_right == false))
-                  lane++;
-              if(ref_vel < Max_S_dot)
-                  ref_vel += Max_S_dot_dot;
+          }else if(ref_vel < Max_S_dot){
+              ref_vel += Max_S_dot_dot;
           }
 
           std::cout << "lane: " << lane << "\ttoo close ahead: " << too_close_ahead
-                    << "\tcar left: " << car_on_left << "\tcar right: " << car_on_right << std::endl;
+                    << "\tfree on left: " << free_left << "\tfree on right: " << free_right << std::endl;
 
 
           // Path planning part
