@@ -167,10 +167,10 @@ int main() {
           for(int i = 0; i < sensor_fusion.size(); i++){
               // Other's car is in my lane
               float detected_d = sensor_fusion[i][6];
-              double detected_s = sensor_fusion[i][5];
-              double vx = sensor_fusion[i][3];
-              double vy = sensor_fusion[i][4];
-              double detected_s_dot = sqrt(vx * vx + vy * vy);
+              float detected_s = sensor_fusion[i][5];
+              float vx = sensor_fusion[i][3];
+              float vy = sensor_fusion[i][4];
+              float detected_s_dot = sqrt(vx * vx + vy * vy);
               // predicted s a step ahead in the future
               detected_s += (double)prev_size * .02 * detected_s_dot;
 
@@ -189,13 +189,14 @@ int main() {
                   if(detected_s - car_s > 0 && detected_s - car_s < 30)
                       too_close_ahead = true;
               // if on the left side
-              else if(car_on_lane + 1 == lane)
+              else if(car_on_lane - 1 == lane)
                       if(car_s > detected_s - 30 && car_s < detected_s + 30)
                           car_on_left = true;
               // if on the right side
-              else if(car_on_lane - 1 == lane)
+              else if(car_on_lane + 1 == lane)
                           if(car_s > detected_s - 30 && car_s < detected_s + 30)
                               car_on_right == true;
+
 
 
               /*
@@ -217,15 +218,17 @@ int main() {
               */
           }
 
-          const double Max_S_dot = 49.5;
+          const double Max_S_dot = 49.5; // max speed mph
           const double Max_S_dot_dot = .224; // ~5 m/s² (< 10 m/s² max. comfortable)
 
-          /*
+/*
           if(too_close_ahead)
               ref_vel -= .224; // ~5 m/s² (< 10 m/s² max. comfortable)
           else if(ref_vel < 49.5)
               ref_vel += .224;
-          */
+*/
+
+
 
           if(too_close_ahead){
               if(car_on_left == false && lane > 0)
@@ -241,6 +244,10 @@ int main() {
               if(ref_vel < Max_S_dot)
                   ref_vel += Max_S_dot_dot;
           }
+
+          std::cout << "lane: " << lane << "\ttoo close ahead: " << too_close_ahead
+                    << "\tcar left: " << car_on_left << "\tcar right: " << car_on_right << std::endl;
+
 
           // Path planning part
 
