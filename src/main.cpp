@@ -163,14 +163,15 @@ int main() {
           bool too_close_ahead = false;
           bool free_left = true;
           bool free_right = true;
+          bool over_speed = false;
 
           for(int i = 0; i < sensor_fusion.size(); i++){
               // Other's car is in my lane
-              float detected_d = sensor_fusion[i][6];
-              float detected_s = sensor_fusion[i][5];
+              float detected_d = sensor_fusion[i][6]; // transversal displacement from the center of the highway
+              float detected_s = sensor_fusion[i][5]; // longitudinal displacement from starting point
               float vx = sensor_fusion[i][3];
               float vy = sensor_fusion[i][4];
-              float detected_s_dot = sqrt(vx * vx + vy * vy);
+              float detected_s_dot = sqrt(vx * vx + vy * vy); // speed
               // predicted s a step ahead in the future
               detected_s += (double)prev_size * .02 * detected_s_dot;
 
@@ -186,20 +187,25 @@ int main() {
 
               //std::cout << "car_on_lane : " << car_on_lane << "\n";
 
-              // if ahead of us
+              // if ahead of us there is a car
               if(car_on_lane == lane){
-                  if(detected_s - car_s > 0 && detected_s - car_s < 30)
+                  if(detected_s - car_s > 0 && detected_s - car_s < 20){
                       too_close_ahead = true;
+                      if(ref_vel > detected_s)
+                          over_speed = true;
+                      else
+                          over_speed = false;
+                  }
               }
-              // if on the left side
+              // if free left side
               else if(car_on_lane + 1 == lane){
-                      if(car_s > abs(detected_s - 20) && car_s < abs(detected_s + 20))
+                      if(abs(car_s + 20) > detected_s && abs(car_s - 15) < detected_s)
                           free_left = false;
               }
-              // if on the right side
+              // if free right side
               else if(car_on_lane - 1 == lane){
-                          if(car_s > abs(detected_s - 20) && car_s < abs(detected_s + 20))
-                              free_right == false;
+                          if(abs(car_s + 20) > detected_s && abs(car_s - 15) < detected_s)
+                              free_right = false;
               }
           }
 
@@ -207,7 +213,8 @@ int main() {
           const double Max_S_dot_dot = .224; // ~5 m/s² (< 10 m/s² max. comfortable)
 
           if(too_close_ahead){
-              ref_vel -= Max_S_dot_dot;
+              while(over_speed)
+                  ref_vel -= Max_S_dot_dot;
               if(free_left && lane > 0)
                   lane--;
               else if(free_right && lane < 2)
