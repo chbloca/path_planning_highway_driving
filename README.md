@@ -1,6 +1,52 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
    
+## Implementation
+
+For this case scenario, driving in a highway, a good path planner model is based on the interpolation among waypoints by means of splines. Approaching this way, transversal movements are executed in a smooth way avoiding high values of jerk which might lead to insecure aggressive maneuvers and lacking of passengers comfort. This is implemented in the path planner.
+
+In addition, decisions on how to react when other cars are encountered on the way are incorporated in the behavioral planner. This is done via a basic FSM (Finite State Machine) which is enough to fulfill the requirements of this project.
+
+For the previous planners to work, a perception module is integrated to process the data from sensor fusion. It allows the car understand what there is in its environment.
+
+All this source code is wrapped up in a simple main.cpp.
+
+### Perception Module
+
+[From line 162 to the next module](https://github.com/chbloca/path_planning_highway_driving/blob/b6b086c7bc527277650ddabfb8343c093d4ba318/src/main.cpp#L162)
+
+This module as indicated before, processes the data from sensor fusion given by the telemetry so that the vehicle understands its environment.
+
+Particularly, the following cases:
+
+* When there is a car ahead of our vehicle
+* When there is a car on the left lane
+* When there is a car on the right lane
+
+This data is in the boolean format which is fed to the Behavioral Planner in order to take decisions.
+
+### Behavioral Planner
+
+[From line 206 until the next module](https://github.com/chbloca/path_planning_highway_driving/blob/b6b086c7bc527277650ddabfb8343c093d4ba318/src/main.cpp#L206)
+
+The behavior basically is composed of 2 cases and 4 actions:
+
+* If there is a car ahead of us, brake and change of lane (left or right indifferently for this case scenario) if it's free, otherwise, stay on lane and just brake.
+
+* If there is no car ahead of us, accelerate until maximum set speed.
+
+For the simulation, this approach is enough to fulfill the minimum requirements.
+
+The main limitation of the approach is that it is not contemplated that a car in a contiguous lane surpasses us and invades our lane right after, this case might be dangerous.
+
+### Path Planner
+
+[From line 227 until the end of the module](https://github.com/chbloca/path_planning_highway_driving/blob/b6b086c7bc527277650ddabfb8343c093d4ba318/src/main.cpp#L227)
+
+The path planner proceeds with the computation of the trajectory given the previous step path points (to proceed smoothly), the localization and the output of the behavioral planner.
+
+The last two waypoints of previous path and other three points ahead distanced each other by 30 m are used to create spline interpolation. By doing this, we ensure that jerk produced by lane shifting is not aggressive because this interpolations is smooth because of the continuity. The calculation of the splines is done by previously transforming the global to local coordinates with a shift and rotation. Once the spline is computed, the beforementioned coordinated system transformation is reverted to deploy the results in the real world.
+
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).  
 
@@ -91,5 +137,3 @@ A really helpful resource for doing this project and creating smooth trajectorie
     cd uWebSockets
     git checkout e94b6e1
     ```
-## Implementation
-
