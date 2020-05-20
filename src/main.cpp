@@ -155,15 +155,15 @@ int main() {
           }
           */
 
-          // Behavior planning part
           int prev_size = previous_path_x.size();
           if(prev_size > 0)
               car_s = end_path_s;
 
+          // Perception module
+
           bool too_close_ahead = false;
           bool free_left = true;
           bool free_right = true;
-          bool over_speed = false;
 
           for(int i = 0; i < sensor_fusion.size(); i++){
               // Other's car is in my lane
@@ -185,16 +185,10 @@ int main() {
               else
                   continue;
 
-              //std::cout << "car_on_lane : " << car_on_lane << "\n";
-
               // if ahead of us there is a car
               if(car_on_lane == lane){
                   if(detected_s - car_s > 0 && detected_s - car_s < 20){
                       too_close_ahead = true;
-                      if(ref_vel > detected_s)
-                          over_speed = true;
-                      else
-                          over_speed = false;
                   }
               }
               // if free left side
@@ -209,25 +203,28 @@ int main() {
               }
           }
 
+          // Behavioral planner
+
           const double Max_S_dot = 49.5; // max speed mph
           const double Max_S_dot_dot = .224; // ~5 m/s² (< 10 m/s² max. comfortable)
 
           if(too_close_ahead){
-              while(over_speed)
-                  ref_vel -= Max_S_dot_dot;
+              ref_vel -= Max_S_dot_dot;
+
               if(free_left && lane > 0)
                   lane--;
               else if(free_right && lane < 2)
                   lane++;
-          }else if(ref_vel < Max_S_dot){
+
+          }else if(ref_vel < Max_S_dot)
               ref_vel += Max_S_dot_dot;
-          }
+
 
           std::cout << "lane: " << lane << "\ttoo close ahead: " << too_close_ahead
-                    << "\tfree on left: " << free_left << "\tfree on right: " << free_right << std::endl;
+                    << "\tfree on left: " << free_left << "\tfree on right: " << free_right
+                    << std::endl;
 
-
-          // Path planning part
+          // Path planner
 
           // Create a list of widely spaced waypoints (x, y) which later will be interpolated by a spline
           vector<double> ptsx;
