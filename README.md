@@ -137,6 +137,7 @@ A really helpful resource for doing this project and creating smooth trajectorie
     cd uWebSockets
     git checkout e94b6e1
     ```
+* [Eigen libraries](http://eigen.tuxfamily.org/index.php?title=Main_Page)
 
 ![](https://github.com/chbloca/path_planning_highway_driving/blob/master/images/a.jpg)
 ![](https://github.com/chbloca/path_planning_highway_driving/blob/master/images/b.jpg)
